@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="description" content="Approtina – seu dashboard gamificado de hábitos e rotina" />
+  <title>Approtina – Login</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="login-page">
+
+  <div class="login-card" id="login-card" hidden>
+    <div class="login-logo" aria-hidden="true">🎮</div>
+    <h1>Approtina</h1>
+    <p>Transforme seus hábitos em missões.<br>Suba de nível todos os dias.</p>
+
+    <!-- Mensagem de erro inline -->
+    <div id="login-error" class="login-error" role="alert" hidden></div>
+
+    <button class="btn-google" id="login-btn">
+      <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      <span id="login-btn-text">Entrar com Google</span>
+      <span class="btn-spinner" id="login-spinner" hidden aria-hidden="true"></span>
+    </button>
+
+    <p class="login-footer">Ao entrar, você concorda com os termos de uso.</p>
+  </div>
+
+  <!-- Spinner inicial enquanto verifica sessão -->
+  <div id="login-loading" class="login-loading-overlay" aria-label="Verificando sessão">
+    <div class="auth-spinner"></div>
+  </div>
+
+  <script type="module">
+    import { getCurrentUser, loginWithGoogle, getAuthErrorMessage } from './js/firebase.js';
+
+    const card       = document.getElementById('login-card');
+    const loadingEl  = document.getElementById('login-loading');
+    const btn        = document.getElementById('login-btn');
+    const btnText    = document.getElementById('login-btn-text');
+    const spinner    = document.getElementById('login-spinner');
+    const errorEl    = document.getElementById('login-error');
+
+    // Verifica sessão antes de exibir o formulário
+    getCurrentUser().then((user) => {
+      if (user) {
+        window.location.replace('dashboard.html');
+        return;
+      }
+      // Não há sessão: esconde loading, exibe card
+      loadingEl.remove();
+      card.hidden = false;
+    });
+
+    btn.addEventListener('click', async () => {
+      setLoading(true);
+      clearError();
+
+      try {
+        await loginWithGoogle();
+        window.location.replace('dashboard.html');
+      } catch (err) {
+        // popup fechado pelo usuário não é exibido como erro
+        if (err?.code === 'auth/popup-closed-by-user' ||
+            err?.code === 'auth/cancelled-popup-request') {
+          setLoading(false);
+          return;
+        }
+        showError(getAuthErrorMessage(err));
+        setLoading(false);
+      }
+    });
+
+    function setLoading(loading) {
+      btn.disabled = loading;
+      spinner.hidden = !loading;
+      btnText.textContent = loading ? 'Entrando...' : 'Entrar com Google';
+    }
+
+    function showError(message) {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+    }
+
+    function clearError() {
+      errorEl.textContent = '';
+      errorEl.hidden = true;
+    }
+
+    // Service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>

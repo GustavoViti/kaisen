@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#7c3aed" />
+  <title>Approtina – Dashboard</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Overlay de auth: bloqueia o dashboard até a sessão ser confirmada -->
+  <div id="auth-loading" class="auth-loading-overlay" role="status" aria-label="Verificando autenticação">
+    <div class="auth-spinner"></div>
+  </div>
+
+<div class="app-wrapper">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-icon" aria-hidden="true">🎮</div>
+      <span class="brand-name">Approtina</span>
+    </div>
+
+    <div class="header-user">
+      <div class="user-greeting">
+        <span class="label">Bem-vindo,</span>
+        <span class="name" id="user-name">Player</span>
+      </div>
+      <img id="user-avatar" class="user-avatar" src="icons/icon-192.png" alt="Avatar do usuário" />
+      <button class="btn-logout" id="logout-btn" aria-label="Sair da conta">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sair
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- Stats -->
+    <div class="stats-grid" role="list" aria-label="Estatísticas do jogador">
+      <div class="stat-card accent-purple" role="listitem">
+        <span class="stat-icon" aria-hidden="true">⚡</span>
+        <span class="stat-value" id="stat-level">—</span>
+        <span class="stat-label">Nível</span>
+      </div>
+      <div class="stat-card accent-cyan" role="listitem">
+        <span class="stat-icon" aria-hidden="true">💎</span>
+        <span class="stat-value" id="stat-xp">—</span>
+        <span class="stat-label">XP Total</span>
+      </div>
+      <div class="stat-card accent-amber" role="listitem">
+        <span class="stat-icon" aria-hidden="true">🔥</span>
+        <span class="stat-value" id="stat-streak">—</span>
+        <span class="stat-label">Dias Seguidos</span>
+      </div>
+      <div class="stat-card accent-green" role="listitem">
+        <span class="stat-icon" aria-hidden="true">✅</span>
+        <span class="stat-value" id="stat-done">—</span>
+        <span class="stat-label">Hoje</span>
+      </div>
+    </div>
+
+    <!-- XP Progress bar -->
+    <div class="xp-card" aria-label="Progresso de XP">
+      <div class="xp-card-header">
+        <span class="xp-card-title">Progresso do Nível</span>
+        <span class="xp-card-label" id="xp-label">0 / 200 XP</span>
+      </div>
+      <div class="xp-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="XP do nível atual">
+        <div class="xp-fill" id="xp-bar"></div>
+      </div>
+    </div>
+
+    <!-- Habits -->
+    <section class="habits-section" aria-label="Hábitos">
+      <div class="section-header">
+        <h2 class="section-title">Missões do Dia</h2>
+        <button class="btn-add" id="add-habit-btn" aria-label="Adicionar novo hábito">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Nova Missão
+        </button>
+      </div>
+
+      <div id="habits-list" role="list" aria-label="Lista de hábitos"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Modal: Adicionar hábito ─────────────────────────────── -->
+<div class="modal-overlay" id="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-heading">Nova Missão</h2>
+      <button class="modal-close" id="modal-close" aria-label="Fechar modal">✕</button>
+    </div>
+
+    <form id="habit-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="habit-name-input">Nome do hábito</label>
+        <input
+          class="form-control"
+          type="text"
+          id="habit-name-input"
+          placeholder="Ex: Meditar 10 minutos"
+          maxlength="60"
+          required
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="habit-category">Categoria</label>
+        <select class="form-control" id="habit-category">
+          <option value="saude">Saúde</option>
+          <option value="estudo">Estudo</option>
+          <option value="fitness">Fitness</option>
+          <option value="financas">Finanças</option>
+          <option value="lazer">Lazer</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn-submit">Adicionar Missão</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── Toast ───────────────────────────────────────────────── -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js').catch(console.error);
+  }
+</script>
+</body>
+</html>

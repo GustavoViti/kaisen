@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\games\\\\Desktop\\\\approtina\" -ErrorAction SilentlyContinue; if \\(-not \\(Test-Path \"C:\\\\Users\\\\games\\\\Desktop\\\\approtina\"\\)\\) { \"Directory does not exist\" })"
+    ]
+  }
+}
