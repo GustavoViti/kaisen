@@ -60,17 +60,24 @@ requireAuth(
 
     hideAuthLoading();
     initCharts();
+    initScrollReveal();
   },
   () => window.location.replace('login.html')
 );
 
-// ── Auth overlay ──────────────────────────────────────────────
+// ── Auth overlay / splash ──────────────────────────────────────
 function hideAuthLoading() {
   const el = document.getElementById('auth-loading');
   if (!el) return;
-  el.classList.add('fade-out');
-  el.addEventListener('transitionend', () => el.remove(), { once: true });
+  // Mínimo de 800ms na splash para não piscar
+  const elapsed = Date.now() - (el._startTime || Date.now());
+  const delay   = Math.max(0, 800 - elapsed);
+  setTimeout(() => {
+    el.classList.add('fade-out');
+    el.addEventListener('transitionend', () => el.remove(), { once: true });
+  }, delay);
 }
+document.getElementById('auth-loading')._startTime = Date.now();
 
 // ── Streak diário ─────────────────────────────────────────────
 async function updateStreak() {
@@ -92,6 +99,7 @@ function renderHeader() {
 }
 
 // ── Render: stats bar ─────────────────────────────────────────
+const _prev = {};   // rastreia valores anteriores para count-up
 function renderStats() {
   const p                        = state.profile || {};
   const totalXp                  = p.xp || 0;
@@ -100,11 +108,12 @@ function renderStats() {
   const today                    = todayStr();
   const doneToday                = state.habits.filter((h) => h.completedDates?.includes(today)).length;
 
-  // Stat cards
-  setEl('stat-level',  level);
-  setEl('stat-xp',     fmtNum(totalXp));
-  setEl('stat-streak', p.streak || 0);
-  setEl('stat-done',   `${doneToday}/${state.habits.length}`);
+  // Stat cards com count-up
+  animateEl('stat-level',  _prev.level  ?? level,  level);
+  animateEl('stat-xp',     _prev.xp     ?? totalXp, totalXp, true);
+  animateEl('stat-streak', _prev.streak ?? (p.streak || 0), p.streak || 0);
+  setEl('stat-done', `${doneToday}/${state.habits.length}`);
+  _prev.level = level; _prev.xp = totalXp; _prev.streak = p.streak || 0;
 
   // XP progress card
   const bar = document.getElementById('xp-bar');
@@ -148,6 +157,32 @@ function fmtNum(n) {
   return Number(n).toLocaleString('pt-BR');
 }
 
+function animateEl(id, from, to, format = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (from === to) return;
+
+  // Pop animation on the stat card
+  const card = el.closest('.stat-card');
+  if (card) {
+    card.classList.remove('popping');
+    void card.offsetWidth;
+    card.classList.add('popping');
+    card.addEventListener('animationend', () => card.classList.remove('popping'), { once: true });
+  }
+
+  const start    = performance.now();
+  const duration = Math.min(600, Math.abs(to - from) * 10 + 200);
+  const update   = (now) => {
+    const t   = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const val  = Math.round(from + (to - from) * ease);
+    el.textContent = format ? fmtNum(val) : val;
+    if (t < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+
 // ── Render: habit cards ───────────────────────────────────────
 const CATEGORY_LABELS = {
   conteudo: 'Conteúdo', estudo: 'Estudo', fitness: 'Fitness',
@@ -170,7 +205,7 @@ function renderHabits() {
     return;
   }
 
-  state.habits.forEach((habit) => {
+  state.habits.forEach((habit, idx) => {
     const done    = habit.completedDates?.includes(today);
     const streak  = calcStreak(habit.completedDates || []);
     const last7   = getLast7Days();
@@ -188,6 +223,7 @@ function renderHabits() {
     const card = document.createElement('div');
     card.className      = `habit-card${done ? ' is-done' : ''}`;
     card.dataset.habitId = habit.id;
+    card.style.animationDelay = `${idx * 60}ms`;
 
     card.innerHTML = `
       <div class="hc-top">
@@ -237,7 +273,10 @@ function renderHabits() {
   });
 
   container.querySelectorAll('.hc-complete-btn').forEach((btn) =>
-    btn.addEventListener('click', () => handleToggle(btn.dataset.id, btn.closest('.habit-card')))
+    btn.addEventListener('click', (e) => {
+      spawnRipple(e, btn);
+      handleToggle(btn.dataset.id, btn.closest('.habit-card'));
+    })
   );
   container.querySelectorAll('.hc-delete-btn').forEach((btn) =>
     btn.addEventListener('click', () => handleDelete(btn.dataset.id))
@@ -335,15 +374,87 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
 // ── Celebrations ──────────────────────────────────────────────
 function celebrateLevelUp(level) {
   showToast(`Nível ${level} desbloqueado!`, 'level', 4000);
+  spawnParticles(40);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `
+    <div class="levelup-inner">
+      <div class="levelup-badge">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Nível</span>
+        <strong>${level}</strong>
+      </div>
+      <p class="levelup-title">Nível desbloqueado!</p>
+      <p class="levelup-sub">Melhoria diária. Evolução constante.</p>
+      <button class="levelup-close" aria-label="Fechar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Continuar
+      </button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  const dismiss = () => {
+    overlay.classList.add('out');
+    overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
+  };
+  overlay.addEventListener('click', dismiss);
+  overlay.querySelector('.levelup-close').addEventListener('click', (e) => { e.stopPropagation(); dismiss(); });
+  setTimeout(dismiss, 5000);
+}
+
+function spawnParticles(count = 30) {
+  const colors = ['#ff6b00', '#ffc857', '#ff8c33', '#ffffff', '#ff4500'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 4 + Math.random() * 7;
+    p.style.cssText = [
+      `left:${Math.random() * 100}vw`,
+      `background:${colors[Math.floor(Math.random() * colors.length)]}`,
+      `animation-duration:${0.9 + Math.random() * 1.6}s`,
+      `animation-delay:${Math.random() * 0.6}s`,
+      `width:${size}px`,
+      `height:${size}px`,
+      `border-radius:${Math.random() > .4 ? '50%' : '2px'}`,
+    ].join(';');
+    document.body.appendChild(p);
+    p.addEventListener('animationend', () => p.remove(), { once: true });
+  }
 }
 
 function spawnXpFloat(cardEl, amount) {
   const el = document.createElement('div');
-  el.className  = 'xp-float';
+  el.className   = 'xp-float';
   el.textContent = `+${amount} XP`;
   cardEl.style.position = 'relative';
   cardEl.appendChild(el);
   el.addEventListener('animationend', () => el.remove(), { once: true });
+}
+
+function spawnRipple(e, btn) {
+  const r    = document.createElement('span');
+  r.className = 'ripple';
+  const rect  = btn.getBoundingClientRect();
+  const size  = Math.max(rect.width, rect.height);
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+  btn.appendChild(r);
+  r.addEventListener('animationend', () => r.remove(), { once: true });
+}
+
+// ── Scroll reveal ─────────────────────────────────────────────
+function initScrollReveal() {
+  const targets = document.querySelectorAll('.chart-card, .xp-card, .stats-grid');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  targets.forEach((el) => { el.classList.add('reveal'); obs.observe(el); });
 }
 
 // ── Toast ─────────────────────────────────────────────────────

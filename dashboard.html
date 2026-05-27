@@ -18,9 +18,14 @@
 </head>
 <body>
 
-  <!-- Overlay de auth: bloqueia o dashboard até a sessão ser confirmada -->
-  <div id="auth-loading" class="auth-loading-overlay" role="status" aria-label="Verificando autenticação">
-    <div class="auth-spinner"></div>
+  <!-- Splash screen: exibida até a sessão ser confirmada -->
+  <div id="auth-loading" class="splash-screen" role="status" aria-label="Carregando Kaisen">
+    <div class="splash-inner">
+      <img class="splash-logo" src="assets/logo-fundo-tranparente.png" alt="Kaisen" />
+      <div class="splash-progress">
+        <div class="splash-track"><div class="splash-fill"></div></div>
+      </div>
+    </div>
   </div>
 
 <div class="app-wrapper">
