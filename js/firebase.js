@@ -4,15 +4,14 @@
 // ============================================================
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
-  getAuth,
+  initializeAuth,
+  browserLocalPersistence,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  browserLocalPersistence,
-  setPersistence
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   getFirestore,
@@ -42,10 +41,8 @@ const firebaseConfig = {
 };
 
 const app  = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export const auth = initializeAuth(app, { persistence: browserLocalPersistence });
 export const db   = getFirestore(app);
-
-setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 let _messaging = null;
 try { _messaging = getMessaging(app); } catch (_) {}
