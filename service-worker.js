@@ -72,7 +72,8 @@ self.addEventListener('fetch', (event) => {
       return fetch(request)
         .then((res) => {
           if (res.ok) {
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, res.clone()));
+            const clone = res.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
           }
           return res;
         })
@@ -88,7 +89,7 @@ async function staleWhileRevalidate(request) {
   const cache  = await caches.open(RUNTIME_CACHE);
   const cached = await cache.match(request);
   const fetchPromise = fetch(request).then((res) => {
-    if (res.ok) cache.put(request, res.clone());
+    if (res.ok) { const clone = res.clone(); cache.put(request, clone); }
     return res;
   }).catch(() => cached);
   return cached || fetchPromise;

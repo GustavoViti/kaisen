@@ -195,16 +195,21 @@ export async function seedDefaultHabits(uid) {
 }
 
 export async function getHabits(uid) {
-  const q    = query(collection(db, 'habits'), where('uid', '==', uid), orderBy('createdAt', 'asc'));
+  const q    = query(collection(db, 'habits'), where('uid', '==', uid));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.createdAt?.seconds ?? 0) - (b.createdAt?.seconds ?? 0));
 }
 
 /** Listener em tempo real para a coleção de hábitos. Retorna unsubscribe. */
 export function subscribeToHabits(uid, callback) {
-  const q = query(collection(db, 'habits'), where('uid', '==', uid), orderBy('createdAt', 'asc'));
+  const q = query(collection(db, 'habits'), where('uid', '==', uid));
   return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    const habits = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.createdAt?.seconds ?? 0) - (b.createdAt?.seconds ?? 0));
+    callback(habits);
   });
 }
 

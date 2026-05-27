@@ -93,9 +93,11 @@ async function updateStreak() {
 
 // ── Render: header ────────────────────────────────────────────
 function renderHeader() {
-  const p = state.profile;
-  document.getElementById('user-name').textContent   = p.displayName?.split(' ')[0] || 'Player';
-  document.getElementById('user-avatar').src         = p.photoURL || 'assets/icone.png';
+  const p        = state.profile;
+  const nameEl   = document.getElementById('user-name');
+  const avatarEl = document.getElementById('user-avatar');
+  if (nameEl)   nameEl.textContent = p.displayName?.split(' ')[0] || 'Player';
+  if (avatarEl) avatarEl.src       = p.photoURL || 'assets/icone.png';
 }
 
 // ── Render: stats bar ─────────────────────────────────────────
