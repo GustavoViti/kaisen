@@ -26,10 +26,10 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy,
   onSnapshot,
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB0WIHyCtPyndl8SDHbM23cXCXXDgRb9UA",
@@ -46,6 +46,28 @@ export const auth = getAuth(app);
 export const db   = getFirestore(app);
 
 setPersistence(auth, browserLocalPersistence).catch(console.error);
+
+let _messaging = null;
+try { _messaging = getMessaging(app); } catch (_) {}
+// Gerar em: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+const VAPID_KEY = 'YOUR_VAPID_KEY_HERE';
+
+export async function requestNotificationPermission(uid) {
+  if (!('Notification' in window) || !_messaging) return null;
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return null;
+    const swReg = await navigator.serviceWorker.ready;
+    const token = await getToken(_messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
+    if (token) await updateProfile(uid, { fcmToken: token });
+    return token;
+  } catch (e) { console.error('FCM token error:', e); return null; }
+}
+
+export function onForegroundMessage(callback) {
+  if (!_messaging) return () => {};
+  return onMessage(_messaging, callback);
+}
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -164,10 +186,10 @@ export function updateProfile(uid, data) {
 }
 
 /** Listener em tempo real para o perfil do usuário. Retorna unsubscribe. */
-export function subscribeToProfile(uid, callback) {
+export function subscribeToProfile(uid, callback, onError) {
   return onSnapshot(doc(db, 'users', uid), (snap) => {
     if (snap.exists()) callback(snap.data());
-  });
+  }, onError);
 }
 
 // ── Habits ────────────────────────────────────────────────────
@@ -203,14 +225,14 @@ export async function getHabits(uid) {
 }
 
 /** Listener em tempo real para a coleção de hábitos. Retorna unsubscribe. */
-export function subscribeToHabits(uid, callback) {
+export function subscribeToHabits(uid, callback, onError) {
   const q = query(collection(db, 'habits'), where('uid', '==', uid));
   return onSnapshot(q, (snap) => {
     const habits = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (a.createdAt?.seconds ?? 0) - (b.createdAt?.seconds ?? 0));
     callback(habits);
-  });
+  }, onError);
 }
 
 export function addHabit(uid, habit) {
@@ -224,6 +246,10 @@ export function addHabit(uid, habit) {
 
 export function deleteHabit(habitId) {
   return deleteDoc(doc(db, 'habits', habitId));
+}
+
+export function updateHabit(habitId, data) {
+  return updateDoc(doc(db, 'habits', habitId), data);
 }
 
 /**
@@ -245,7 +271,56 @@ export async function toggleHabitToday(uid, habit) {
   const userData       = (await getDoc(userRef)).data();
   const newXp          = Math.max(0, (userData.xp || 0) + (done ? -xpAmount : xpAmount));
   const { level: newLevel } = calcLevel(newXp);
-  await updateDoc(userRef, { xp: newXp, level: newLevel });
+  const logEntry = {
+    type:      done ? 'undone' : 'done',
+    habitName: habit.name,
+    habitIcon: habit.icon || '',
+    xp:        done ? -xpAmount : xpAmount,
+    ts:        new Date().toISOString(),
+  };
+  const activityLog = [logEntry, ...(userData.activityLog || [])].slice(0, 20);
+  await updateDoc(userRef, { xp: newXp, level: newLevel, activityLog });
 
   return { done: !done, xp: newXp, level: newLevel, xpAmount, completedDates: updated };
+}
+
+// ── Badges ────────────────────────────────────────────────────
+
+export const BADGES = [
+  { id: 'first_step',  icon: '🏁', name: 'Primeiro Passo',   desc: 'Complete seu primeiro hábito' },
+  { id: 'week_fire',   icon: '🔥', name: 'Semana de Fogo',   desc: '7 dias consecutivos de streak' },
+  { id: 'xp_500',      icon: '💎', name: 'Acumulador',       desc: 'Acumule 500 XP' },
+  { id: 'xp_1000',     icon: '👑', name: 'Millenium',        desc: 'Acumule 1.000 XP' },
+  { id: 'level_5',     icon: '⚔️', name: 'Aventureiro',      desc: 'Alcance o nível 5' },
+  { id: 'level_10',    icon: '🗡️', name: 'Guerreiro',        desc: 'Alcance o nível 10' },
+  { id: 'streak_30',   icon: '🌟', name: '30 Dias Seguidos', desc: '30 dias consecutivos de streak' },
+  { id: 'perfect_day', icon: '✨', name: 'Dia Perfeito',     desc: 'Conclua todas as missões em um dia' },
+];
+
+function _checkBadge(id, profile, habits) {
+  const today = new Date().toISOString().split('T')[0];
+  switch (id) {
+    case 'first_step':  return habits.some((h) => h.completedDates?.length > 0);
+    case 'week_fire':   return (profile.streak || 0) >= 7;
+    case 'xp_500':      return (profile.xp || 0) >= 500;
+    case 'xp_1000':     return (profile.xp || 0) >= 1000;
+    case 'level_5':     return (profile.level || 1) >= 5;
+    case 'level_10':    return (profile.level || 1) >= 10;
+    case 'streak_30':   return (profile.streak || 0) >= 30;
+    case 'perfect_day': return habits.length > 0 && habits.every((h) => h.completedDates?.includes(today));
+    default:            return false;
+  }
+}
+
+export async function checkAndAwardBadges(uid, profile, habits) {
+  const earned    = Array.isArray(profile.badges) ? [...profile.badges] : [];
+  const newBadges = [];
+  for (const badge of BADGES) {
+    if (!earned.includes(badge.id) && _checkBadge(badge.id, profile, habits)) {
+      earned.push(badge.id);
+      newBadges.push(badge);
+    }
+  }
+  if (newBadges.length) await updateProfile(uid, { badges: earned });
+  return newBadges;
 }

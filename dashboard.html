@@ -43,6 +43,12 @@
         <span class="name" id="user-name">Player</span>
       </div>
       <img id="user-avatar" class="user-avatar" src="assets/icone.png" alt="Avatar do usuário" />
+      <button class="btn-notify" id="notify-btn" aria-label="Ativar notificações" aria-pressed="false" title="Ativar notificações">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
       <button class="btn-logout" id="logout-btn" aria-label="Sair da conta">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -150,6 +156,25 @@
       </div>
 
       <div id="habits-list" role="list" aria-label="Lista de hábitos"></div>
+    </section>
+
+    <!-- ── Conquistas ───────────────────────────────────────────── -->
+    <section class="badges-section" aria-label="Conquistas">
+      <div class="section-header">
+        <h2 class="section-title">Conquistas</h2>
+        <span class="badge-count-pill" id="badge-count">0/8</span>
+      </div>
+      <div class="badges-grid" id="badges-grid"></div>
+    </section>
+
+    <!-- ── Atividade recente ─────────────────────────────────── -->
+    <section class="activity-section" aria-label="Atividade recente">
+      <div class="section-header">
+        <h2 class="section-title">Atividade Recente</h2>
+      </div>
+      <div class="activity-list" id="activity-list">
+        <p class="activity-empty">Nenhuma atividade ainda.</p>
+      </div>
     </section>
 
     <!-- ── Análises ────────────────────────────────────────────── -->
@@ -266,6 +291,24 @@
           <option value="lazer">🎮 Lazer</option>
           <option value="outros">⚡ Outros</option>
         </select>
+      </div>
+
+      <!-- Frequência -->
+      <div class="form-group">
+        <label class="form-label">Frequência</label>
+        <div class="freq-tabs">
+          <button type="button" class="freq-tab active" data-freq="daily">Diário</button>
+          <button type="button" class="freq-tab" data-freq="weekly">Dias específicos</button>
+        </div>
+        <div class="freq-days-picker" id="freq-days-picker" hidden>
+          <button type="button" class="freq-day-btn" data-day="1">Seg</button>
+          <button type="button" class="freq-day-btn" data-day="2">Ter</button>
+          <button type="button" class="freq-day-btn" data-day="3">Qua</button>
+          <button type="button" class="freq-day-btn" data-day="4">Qui</button>
+          <button type="button" class="freq-day-btn" data-day="5">Sex</button>
+          <button type="button" class="freq-day-btn" data-day="6">Sáb</button>
+          <button type="button" class="freq-day-btn" data-day="0">Dom</button>
+        </div>
       </div>
 
       <!-- XP -->
