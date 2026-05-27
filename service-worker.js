@@ -1,5 +1,5 @@
-const STATIC_CACHE  = 'approtina-static-v2';
-const RUNTIME_CACHE = 'approtina-runtime-v1';
+const STATIC_CACHE  = 'kaisen-static-v2';
+const RUNTIME_CACHE = 'kaisen-runtime-v1';
 const ALL_CACHES    = new Set([STATIC_CACHE, RUNTIME_CACHE]);
 
 // Local assets precached on install

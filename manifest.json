@@ -1,14 +1,14 @@
 {
   "id": "/",
-  "name": "Approtina – Rotina Gamificada",
-  "short_name": "Approtina",
+  "name": "Kaisen – Rotina Gamificada",
+  "short_name": "Kaisen",
   "description": "Dashboard gamificado de hábitos e rotina diária",
   "lang": "pt-BR",
   "start_url": "/login.html",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0d0d14",
-  "theme_color": "#7c3aed",
+  "theme_color": "#ff6b00",
   "orientation": "portrait-primary",
   "categories": ["lifestyle", "productivity"],
   "icons": [
@@ -52,7 +52,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Dashboard de hábitos Approtina"
+      "label": "Dashboard de hábitos Kaisen"
     }
   ]
 }

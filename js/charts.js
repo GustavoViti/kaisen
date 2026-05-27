@@ -6,24 +6,23 @@
 
 // ── Paleta ────────────────────────────────────────────────────
 const C = {
-  purple:  '#7c3aed',
-  purpleL: '#9f6ef5',
-  cyan:    '#06b6d4',
-  green:   '#10b981',
-  amber:   '#f59e0b',
-  red:     '#ef4444',
-  grid:    'rgba(255,255,255,0.06)',
-  muted:   '#9090b0',
-  tooltip: '#13131f',
+  orange:  '#ff6b00',
+  orangeL: '#ff8c33',
+  gold:    '#ffc857',
+  green:   '#4ade80',
+  red:     '#ff3d00',
+  grid:    'rgba(255,255,255,0.05)',
+  muted:   '#666666',
+  tooltip: '#1a1a1a',
 };
 
 const CAT_COLOR = {
-  conteudo: C.cyan,
-  estudo:   C.purpleL,
+  conteudo: C.orange,
+  estudo:   C.gold,
   fitness:  C.red,
-  financas: C.amber,
+  financas: C.gold,
   saude:    C.green,
-  lazer:    C.cyan,
+  lazer:    C.orangeL,
   outros:   C.muted,
 };
 
@@ -65,7 +64,7 @@ function applyDefaults() {
     backgroundColor:  C.tooltip,
     borderColor:      'rgba(255,255,255,0.1)',
     borderWidth:      1,
-    titleColor:       '#e8e8f0',
+    titleColor:       '#f5f5f5',
     bodyColor:        C.muted,
     padding:          12,
     cornerRadius:     10,
@@ -82,8 +81,8 @@ function buildWeeklyChart() {
   if (!ctx) return null;
 
   const grad = ctx.createLinearGradient(0, 0, 0, 240);
-  grad.addColorStop(0, 'rgba(124,58,237,0.88)');
-  grad.addColorStop(1, 'rgba(124,58,237,0.14)');
+  grad.addColorStop(0, 'rgba(255,107,0,0.90)');
+  grad.addColorStop(1, 'rgba(255,107,0,0.12)');
 
   return new window.Chart(ctx, {
     type: 'bar',
@@ -92,7 +91,7 @@ function buildWeeklyChart() {
       datasets: [{
         data: [],
         backgroundColor: grad,
-        hoverBackgroundColor: 'rgba(159,110,245,0.92)',
+        hoverBackgroundColor: 'rgba(255,140,51,0.92)',
         borderRadius: 8,
         borderSkipped: false,
       }]
@@ -147,8 +146,8 @@ function buildXpChart() {
   if (!ctx) return null;
 
   const fill = ctx.createLinearGradient(0, 0, 0, 210);
-  fill.addColorStop(0, 'rgba(6,182,212,0.38)');
-  fill.addColorStop(1, 'rgba(6,182,212,0.01)');
+  fill.addColorStop(0, 'rgba(255,200,87,0.35)');
+  fill.addColorStop(1, 'rgba(255,200,87,0.01)');
 
   return new window.Chart(ctx, {
     type: 'line',
@@ -156,14 +155,14 @@ function buildXpChart() {
       labels: [],
       datasets: [{
         data: [],
-        borderColor: C.cyan,
+        borderColor: C.gold,
         backgroundColor: fill,
         borderWidth: 2.5,
         fill: true,
         tension: 0.45,
         pointRadius: 0,
         pointHoverRadius: 6,
-        pointHoverBackgroundColor: C.cyan,
+        pointHoverBackgroundColor: C.gold,
         pointHoverBorderColor: '#fff',
         pointHoverBorderWidth: 2,
       }]
