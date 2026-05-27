@@ -688,7 +688,11 @@ function fmtNum(n) { return Number(n).toLocaleString('pt-BR'); }
 
 function animateEl(id, from, to, format = false) {
   const el = document.getElementById(id);
-  if (!el || from === to) return;
+  if (!el) return;
+  if (from === to) {
+    el.textContent = format ? fmtNum(to) : to;
+    return;
+  }
   const card = el.closest('.stat-card');
   if (card) {
     card.classList.remove('popping');
