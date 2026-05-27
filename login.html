@@ -38,6 +38,24 @@
       <span class="btn-spinner" id="login-spinner" hidden aria-hidden="true"></span>
     </button>
 
+    <div class="login-divider" aria-hidden="true"><span>ou</span></div>
+
+    <form id="email-login-form" class="login-form" novalidate>
+      <label>
+        <span>Email</span>
+        <input id="login-email" type="email" autocomplete="email" placeholder="seu@email.com" required />
+      </label>
+      <label>
+        <span>Senha</span>
+        <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6" required />
+      </label>
+      <button type="submit" class="btn-email btn-google" id="login-email-btn">
+        <span id="login-email-btn-text">Entrar com Email</span>
+        <span class="btn-spinner" id="login-email-spinner" hidden aria-hidden="true"></span>
+      </button>
+      <button type="button" class="btn-link" id="toggle-auth-mode">Criar conta</button>
+    </form>
+
     <p class="login-footer">Ao entrar, você concorda com os termos de uso.</p>
   </div>
 
@@ -47,25 +65,50 @@
   </div>
 
   <script type="module">
-    import { getCurrentUser, loginWithGoogle, getAuthErrorMessage } from './js/firebase.js';
+    import { getCurrentUser, loginWithGoogle, loginWithEmailAndPassword, registerWithEmailAndPassword, getAuthErrorMessage } from './js/firebase.js';
 
-    const card       = document.getElementById('login-card');
-    const loadingEl  = document.getElementById('login-loading');
-    const btn        = document.getElementById('login-btn');
-    const btnText    = document.getElementById('login-btn-text');
-    const spinner    = document.getElementById('login-spinner');
-    const errorEl    = document.getElementById('login-error');
+    const card            = document.getElementById('login-card');
+    const loadingEl       = document.getElementById('login-loading');
+    const btn             = document.getElementById('login-btn');
+    const btnText         = document.getElementById('login-btn-text');
+    const spinner         = document.getElementById('login-spinner');
+    const emailInput      = document.getElementById('login-email');
+    const passwordInput   = document.getElementById('login-password');
+    const emailBtn        = document.getElementById('login-email-btn');
+    const emailBtnText    = document.getElementById('login-email-btn-text');
+    const emailSpinner    = document.getElementById('login-email-spinner');
+    const toggleAuthMode  = document.getElementById('toggle-auth-mode');
+    const loginForm       = document.getElementById('email-login-form');
+    const errorEl         = document.getElementById('login-error');
+    let isRegisterMode    = false;
 
     // Verifica sessão antes de exibir o formulário
-    getCurrentUser().then((user) => {
-      if (user) {
-        window.location.replace('dashboard.html');
-        return;
+    const authCheckTimeout = setTimeout(() => {
+      if (card.hidden) {
+        console.warn('Verificação de sessão demorou demais. Exibindo formulário manualmente.');
+        loadingEl.remove();
+        card.hidden = false;
       }
-      // Não há sessão: esconde loading, exibe card
-      loadingEl.remove();
-      card.hidden = false;
-    });
+    }, 3000);
+
+    getCurrentUser()
+      .then((user) => {
+        clearTimeout(authCheckTimeout);
+        if (user) {
+          window.location.replace('dashboard.html');
+          return;
+        }
+        // Não há sessão: esconde loading, exibe card
+        loadingEl.remove();
+        card.hidden = false;
+      })
+      .catch((err) => {
+        clearTimeout(authCheckTimeout);
+        console.error('Erro ao verificar sessão de login:', err);
+        loadingEl.remove();
+        card.hidden = false;
+        showError(getAuthErrorMessage(err));
+      });
 
     btn.addEventListener('click', async () => {
       setLoading(true);
@@ -75,6 +118,7 @@
         await loginWithGoogle();
         window.location.replace('dashboard.html');
       } catch (err) {
+        console.error('Erro no login com Google:', err);
         // popup fechado pelo usuário não é exibido como erro
         if (err?.code === 'auth/popup-closed-by-user' ||
             err?.code === 'auth/cancelled-popup-request') {
@@ -86,10 +130,52 @@
       }
     });
 
+    toggleAuthMode.addEventListener('click', () => {
+      isRegisterMode = !isRegisterMode;
+      emailBtnText.textContent = isRegisterMode ? 'Criar conta' : 'Entrar com Email';
+      toggleAuthMode.textContent = isRegisterMode ? 'Já tenho conta' : 'Criar conta';
+      clearError();
+    });
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setEmailLoading(true);
+      clearError();
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      if (!email || !password) {
+        showError('Informe email e senha para continuar.');
+        setEmailLoading(false);
+        return;
+      }
+
+      try {
+        if (isRegisterMode) {
+          await registerWithEmailAndPassword(email, password);
+        } else {
+          await loginWithEmailAndPassword(email, password);
+        }
+        window.location.replace('dashboard.html');
+      } catch (err) {
+        console.error('Erro no login com email:', err);
+        showError(getAuthErrorMessage(err));
+        setEmailLoading(false);
+      }
+    });
+
     function setLoading(loading) {
       btn.disabled = loading;
       spinner.hidden = !loading;
       btnText.textContent = loading ? 'Entrando...' : 'Entrar com Google';
+    }
+
+    function setEmailLoading(loading) {
+      emailBtn.disabled = loading;
+      emailSpinner.hidden = !loading;
+      emailBtnText.textContent = loading
+        ? (isRegisterMode ? 'Criando conta...' : 'Entrando...')
+        : (isRegisterMode ? 'Criar conta' : 'Entrar com Email');
     }
 
     function showError(message) {

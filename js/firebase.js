@@ -7,6 +7,8 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   browserLocalPersistence,
@@ -60,6 +62,14 @@ export function loginWithGoogle() {
   return signInWithPopup(auth, googleProvider);
 }
 
+export function loginWithEmailAndPassword(email, password) {
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export function registerWithEmailAndPassword(email, password) {
+  return createUserWithEmailAndPassword(auth, email, password);
+}
+
 export function logout() {
   return signOut(auth);
 }
@@ -75,17 +85,28 @@ export async function requireAuth(onAuthed, onUnauthed) {
 }
 
 const AUTH_ERRORS = {
-  'auth/popup-closed-by-user':    'Login cancelado. Tente novamente.',
-  'auth/cancelled-popup-request': 'Login cancelado.',
-  'auth/popup-blocked':           'Popup bloqueado. Permita popups e tente novamente.',
-  'auth/network-request-failed':  'Sem conexão. Verifique sua internet.',
-  'auth/too-many-requests':       'Muitas tentativas. Aguarde um momento.',
-  'auth/user-disabled':           'Esta conta foi desativada.',
+  'auth/popup-closed-by-user':                    'Login cancelado. Tente novamente.',
+  'auth/cancelled-popup-request':                 'Login cancelado.',
+  'auth/popup-blocked':                           'Popup bloqueado. Permita popups e tente novamente.',
+  'auth/network-request-failed':                  'Sem conexão. Verifique sua internet.',
+  'auth/too-many-requests':                       'Muitas tentativas. Aguarde um momento.',
+  'auth/user-disabled':                           'Esta conta foi desativada.',
   'auth/account-exists-with-different-credential': 'Conta já existe com outro método.',
+  'auth/unauthorized-domain':                     'O domínio não está autorizado no Firebase Auth.',
+  'auth/operation-not-supported-in-this-environment': 'Operação não suportada neste ambiente.',
+  'auth/invalid-credential':                      'Credenciais inválidas. Tente novamente.',
+  'auth/credential-already-in-use':               'Esta credencial já está associada a outra conta.',
+  'auth/invalid-email':                           'E-mail inválido.',
+  'auth/user-not-found':                          'Usuário não encontrado.',
+  'auth/email-already-in-use':                    'Este e-mail já está em uso.',
+  'auth/wrong-password':                          'Senha incorreta. Verifique e tente novamente.',
+  'auth/weak-password':                           'Senha fraca. Informe pelo menos 6 caracteres.',
+  'auth/missing-email':                           'Informe um e-mail válido.',
 };
 
 export function getAuthErrorMessage(error) {
-  return AUTH_ERRORS[error?.code] ?? 'Erro ao fazer login. Tente novamente.';
+  if (!error) return 'Erro ao fazer login. Tente novamente.';
+  return AUTH_ERRORS[error.code] ?? `${AUTH_ERRORS[error.code] || 'Erro ao fazer login. Tente novamente.'} (${error.code})`;
 }
 
 // ── XP / Level system ─────────────────────────────────────────
