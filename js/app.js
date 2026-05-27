@@ -3,6 +3,7 @@ import {
   logout,
   getOrCreateProfile,
   updateProfile,
+  calcLevel,
   seedDefaultHabits,
   subscribeToHabits,
   subscribeToProfile,
@@ -10,6 +11,7 @@ import {
   deleteHabit,
   toggleHabitToday
 } from './firebase.js';
+import { initCharts, updateCharts, destroyCharts } from './charts.js';
 
 // ── State ─────────────────────────────────────────────────────
 const state = {
@@ -30,13 +32,20 @@ requireAuth(
     await seedDefaultHabits(user.uid);
 
     // Perfil em tempo real (XP, level, streak)
-    state.unsubProfile = subscribeToProfile(user.uid, (profile) => {
+    state.unsubProfile = subscribeToProfile(user.uid, async (profile) => {
+      const { level: correctLevel } = calcLevel(profile.xp || 0);
+
+      // Migração silenciosa: corrige level armazenado se a fórmula mudou
+      if (profile.level !== correctLevel) {
+        await updateProfile(user.uid, { level: correctLevel });
+      }
+
       const prevLevel     = state.profile?.level;
-      state.profile       = profile;
+      state.profile       = { ...profile, level: correctLevel };
       renderHeader();
       renderStats();
-      if (state.profileReady && prevLevel && profile.level > prevLevel) {
-        celebrateLevelUp(profile.level);
+      if (state.profileReady && prevLevel && correctLevel > prevLevel) {
+        celebrateLevelUp(correctLevel);
       }
       state.profileReady = true;
     });
@@ -46,9 +55,11 @@ requireAuth(
       state.habits = habits;
       renderHabits();
       renderStats();
+      updateCharts(habits);
     });
 
     hideAuthLoading();
+    initCharts();
   },
   () => window.location.replace('login.html')
 );
@@ -82,23 +93,59 @@ function renderHeader() {
 
 // ── Render: stats bar ─────────────────────────────────────────
 function renderStats() {
-  const p          = state.profile || {};
-  const xp         = p.xp    || 0;
-  const level      = p.level || 1;
-  const xpInLevel  = xp % 200;
-  const pct        = Math.round((xpInLevel / 200) * 100);
-  const today      = todayStr();
-  const doneToday  = state.habits.filter((h) => h.completedDates?.includes(today)).length;
+  const p                        = state.profile || {};
+  const totalXp                  = p.xp || 0;
+  const { level, xpInLevel, xpNeeded } = calcLevel(totalXp);
+  const pct                      = Math.round((xpInLevel / xpNeeded) * 100);
+  const today                    = todayStr();
+  const doneToday                = state.habits.filter((h) => h.completedDates?.includes(today)).length;
 
-  document.getElementById('stat-level').textContent  = level;
-  document.getElementById('stat-xp').textContent     = xp;
-  document.getElementById('stat-streak').textContent = p.streak || 0;
-  document.getElementById('stat-done').textContent   = `${doneToday}/${state.habits.length}`;
+  // Stat cards
+  setEl('stat-level',  level);
+  setEl('stat-xp',     fmtNum(totalXp));
+  setEl('stat-streak', p.streak || 0);
+  setEl('stat-done',   `${doneToday}/${state.habits.length}`);
 
+  // XP progress card
   const bar = document.getElementById('xp-bar');
-  bar.style.width = `${pct}%`;
-  bar.closest('[role="progressbar"]').setAttribute('aria-valuenow', pct);
-  document.getElementById('xp-label').textContent = `${xpInLevel} / 200 XP — Nível ${level}`;
+  if (bar) {
+    bar.style.width = `${pct}%`;
+    bar.closest('[role="progressbar"]')?.setAttribute('aria-valuenow', pct);
+  }
+
+  setEl('xp-level-num',   level);
+  setEl('level-title',    getLevelTitle(level));
+  setEl('xp-total-val',   fmtNum(totalXp));
+  setEl('xp-label',       `${fmtNum(xpInLevel)} / ${fmtNum(xpNeeded)} XP`);
+  setEl('xp-pct',         `${pct}%`);
+  setEl('xp-remaining',   fmtNum(xpNeeded - xpInLevel));
+  setEl('xp-next-level',  level + 1);
+}
+
+// ── Level titles ──────────────────────────────────────────────
+const LEVEL_TITLES = [
+  [2,  'Iniciante'],
+  [5,  'Aventureiro'],
+  [10, 'Guerreiro'],
+  [15, 'Herói'],
+  [20, 'Lendário'],
+];
+
+function getLevelTitle(level) {
+  for (const [max, title] of LEVEL_TITLES) {
+    if (level <= max) return title;
+  }
+  return 'Mestre';
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function setEl(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function fmtNum(n) {
+  return Number(n).toLocaleString('pt-BR');
 }
 
 // ── Render: habit cards ───────────────────────────────────────
@@ -225,6 +272,7 @@ const modal     = document.getElementById('habit-modal');
 const modalForm = document.getElementById('habit-form');
 const xpSlider  = document.getElementById('habit-xp');
 const xpDisplay = document.getElementById('xp-display');
+const xpSideVal = modalForm?.querySelector('.xp-slider-val');
 
 document.getElementById('add-habit-btn').addEventListener('click', () => {
   modal.classList.add('open');
@@ -235,10 +283,19 @@ document.getElementById('modal-close').addEventListener('click', closeModal);
 modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
 if (xpSlider) {
-  xpSlider.addEventListener('input', () => { xpDisplay.textContent = xpSlider.value; });
+  xpSlider.addEventListener('input', () => {
+    const v = xpSlider.value;
+    if (xpDisplay) xpDisplay.textContent = v;
+    if (xpSideVal) xpSideVal.textContent = v;
+  });
 }
 
-function closeModal() { modal.classList.remove('open'); modalForm.reset(); xpDisplay.textContent = '20'; }
+function closeModal() {
+  modal.classList.remove('open');
+  modalForm.reset();
+  if (xpDisplay) xpDisplay.textContent = '20';
+  if (xpSideVal) xpSideVal.textContent = '20';
+}
 
 modalForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -263,6 +320,7 @@ modalForm.addEventListener('submit', async (e) => {
 document.getElementById('logout-btn').addEventListener('click', async () => {
   state.unsubHabits?.();
   state.unsubProfile?.();
+  destroyCharts();
   await logout();
   window.location.replace('login.html');
 });

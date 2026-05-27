@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#7c3aed" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Approtina" />
   <title>Approtina – Dashboard</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icons/icon-192.png" />
@@ -73,15 +76,50 @@
       </div>
     </div>
 
-    <!-- XP Progress bar -->
-    <div class="xp-card" aria-label="Progresso de XP">
-      <div class="xp-card-header">
-        <span class="xp-card-title">Progresso do Nível</span>
-        <span class="xp-card-label" id="xp-label">0 / 200 XP</span>
+    <!-- XP / Level card -->
+    <div class="xp-card" aria-label="Progresso de XP e nível">
+
+      <div class="xp-card-top">
+        <!-- Lado esquerdo: badge de nível + título de rank -->
+        <div class="xp-level-group">
+          <div class="xp-level-badge">
+            <span class="xp-level-icon" aria-hidden="true">⚡</span>
+            <span>Nível <strong id="xp-level-num">1</strong></span>
+          </div>
+          <span class="xp-level-title" id="level-title">Iniciante</span>
+        </div>
+
+        <!-- Lado direito: XP total -->
+        <div class="xp-total-group">
+          <span class="xp-total-val" id="xp-total-val">0</span>
+          <span class="xp-total-lbl">XP total</span>
+        </div>
       </div>
-      <div class="xp-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="XP do nível atual">
-        <div class="xp-fill" id="xp-bar"></div>
+
+      <!-- Barra de progresso -->
+      <div class="xp-track-wrap">
+        <div
+          class="xp-track"
+          role="progressbar"
+          aria-valuenow="0"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-label="Progresso para o próximo nível"
+        >
+          <div class="xp-fill" id="xp-bar"></div>
+        </div>
+        <span class="xp-pct" id="xp-pct" aria-hidden="true">0%</span>
       </div>
+
+      <!-- Rodapé: XP no nível / faltam -->
+      <div class="xp-card-footer">
+        <span class="xp-in-level" id="xp-label">0 / 100 XP</span>
+        <span class="xp-to-next">
+          Faltam <strong id="xp-remaining">100</strong> XP
+          para o nível <span id="xp-next-level">2</span>
+        </span>
+      </div>
+
     </div>
 
     <!-- Habits -->
@@ -99,6 +137,60 @@
       <div id="habits-list" role="list" aria-label="Lista de hábitos"></div>
     </section>
 
+    <!-- ── Análises ────────────────────────────────────────────── -->
+    <section class="charts-section" aria-label="Análises de desempenho">
+      <div class="section-header">
+        <h2 class="section-title">Análises</h2>
+        <span class="charts-period-badge">Dados do Firestore</span>
+      </div>
+
+      <div class="charts-grid">
+
+        <!-- Gráfico 1: hábitos por dia (semana) -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-icon" aria-hidden="true">📊</div>
+            <div>
+              <h3 class="chart-title">Hábitos por Dia</h3>
+              <p class="chart-subtitle">Última semana</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-weekly" aria-label="Gráfico de hábitos concluídos por dia" role="img"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfico 2: evolução de XP (30 dias) -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-icon" aria-hidden="true">📈</div>
+            <div>
+              <h3 class="chart-title">Evolução de XP</h3>
+              <p class="chart-subtitle">Últimos 30 dias · acumulado</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-xp" aria-label="Gráfico de evolução de XP" role="img"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfico 3: consistência por hábito (30 dias) -->
+        <div class="chart-card chart-card-full">
+          <div class="chart-card-header">
+            <div class="chart-card-icon" aria-hidden="true">🎯</div>
+            <div>
+              <h3 class="chart-title">Consistência por Missão</h3>
+              <p class="chart-subtitle">% de conclusão nos últimos 30 dias</p>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap-consistency">
+            <canvas id="chart-consistency" aria-label="Gráfico de consistência por hábito" role="img"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -111,29 +203,57 @@
     </div>
 
     <form id="habit-form" novalidate>
-      <div class="form-group">
-        <label class="form-label" for="habit-name-input">Nome do hábito</label>
-        <input
-          class="form-control"
-          type="text"
-          id="habit-name-input"
-          placeholder="Ex: Meditar 10 minutos"
-          maxlength="60"
-          required
-          autocomplete="off"
-        />
+
+      <!-- Nome + Ícone -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="habit-name-input">Nome da missão</label>
+          <input
+            class="form-control"
+            type="text"
+            id="habit-name-input"
+            placeholder="Ex: Meditar 10 min"
+            maxlength="40"
+            required
+            autocomplete="off"
+          />
+        </div>
+        <div class="form-group form-group-icon">
+          <label class="form-label" for="habit-icon-input">Ícone</label>
+          <input
+            class="form-control-icon"
+            type="text"
+            id="habit-icon-input"
+            placeholder="🎯"
+            maxlength="2"
+            autocomplete="off"
+          />
+        </div>
       </div>
 
+      <!-- Categoria -->
       <div class="form-group">
         <label class="form-label" for="habit-category">Categoria</label>
         <select class="form-control" id="habit-category">
-          <option value="saude">Saúde</option>
-          <option value="estudo">Estudo</option>
-          <option value="fitness">Fitness</option>
-          <option value="financas">Finanças</option>
-          <option value="lazer">Lazer</option>
-          <option value="outros">Outros</option>
+          <option value="conteudo">🎬 Conteúdo</option>
+          <option value="estudo">💻 Estudo</option>
+          <option value="fitness">🏋️ Fitness</option>
+          <option value="financas">💼 Finanças</option>
+          <option value="saude">😴 Saúde</option>
+          <option value="lazer">🎮 Lazer</option>
+          <option value="outros">⚡ Outros</option>
         </select>
+      </div>
+
+      <!-- XP -->
+      <div class="form-group">
+        <label class="form-label" for="habit-xp">
+          XP por conclusão — <span id="xp-display">20</span> pts
+        </label>
+        <div class="xp-slider-row">
+          <input type="range" id="habit-xp" min="5" max="100" step="5" value="20" />
+          <span class="xp-slider-val" aria-hidden="true">20</span>
+        </div>
       </div>
 
       <button type="submit" class="btn-submit">Adicionar Missão</button>
@@ -141,9 +261,27 @@
   </div>
 </div>
 
+<!-- ── Install banner ───────────────────────────────────────── -->
+<div id="install-banner" class="install-banner" role="complementary" aria-label="Instalar aplicativo">
+  <div class="install-banner-content">
+    <span class="install-banner-icon" aria-hidden="true">📲</span>
+    <div class="install-banner-text">
+      <strong>Instale o Approtina</strong>
+      <span>Acesso rápido · funciona offline</span>
+    </div>
+  </div>
+  <div class="install-banner-actions">
+    <button class="install-btn" onclick="installPWA()">Instalar</button>
+    <button class="install-dismiss" onclick="dismissInstall()" aria-label="Dispensar">✕</button>
+  </div>
+</div>
+
 <!-- ── Toast ───────────────────────────────────────────────── -->
 <div id="toast" role="status" aria-live="polite"></div>
 
+<!-- Chart.js via CDN — carregado antes do módulo app.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="js/pwa.js" defer></script>
 <script type="module" src="js/app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {

@@ -1,38 +1,101 @@
-const CACHE_NAME = 'approtina-v1';
+const STATIC_CACHE  = 'approtina-static-v2';
+const RUNTIME_CACHE = 'approtina-runtime-v1';
+const ALL_CACHES    = new Set([STATIC_CACHE, RUNTIME_CACHE]);
+
+// Local assets precached on install
 const STATIC_ASSETS = [
   '/login.html',
   '/dashboard.html',
+  '/offline.html',
   '/css/style.css',
   '/js/app.js',
   '/js/firebase.js',
-  '/manifest.json'
+  '/js/charts.js',
+  '/js/pwa.js',
+  '/manifest.json',
 ];
 
+// Optional — won't abort install if missing (icons may not be generated yet)
+const OPTIONAL_ASSETS = [
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+];
+
+// ── Install ───────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(STATIC_CACHE).then(async (cache) => {
+      await cache.addAll(STATIC_ASSETS);
+      await Promise.allSettled(OPTIONAL_ASSETS.map((url) => cache.add(url)));
+    })
   );
   self.skipWaiting();
 });
 
+// ── Activate ──────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    caches.keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => !ALL_CACHES.has(k)).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
+// ── Fetch ─────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Firebase e requests externos: network-first
-  if (event.request.url.includes('firestore') || event.request.url.includes('googleapis')) {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+
+  // Firebase Auth / Firestore / Google Identity: network-only, no caching
+  if (
+    url.hostname.includes('firestore.googleapis.com') ||
+    url.hostname.includes('identitytoolkit.googleapis.com') ||
+    url.hostname.includes('securetoken.googleapis.com') ||
+    (url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs'))
+  ) {
+    event.respondWith(fetch(request));
     return;
   }
 
-  // Assets estáticos: cache-first
+  // Google Fonts + Chart.js CDN: stale-while-revalidate
+  if (
+    url.hostname === 'fonts.googleapis.com' ||
+    url.hostname === 'fonts.gstatic.com' ||
+    url.hostname === 'cdn.jsdelivr.net'
+  ) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // Everything else (local assets): cache-first → offline fallback
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, res.clone()));
+          }
+          return res;
+        })
+        .catch(() => {
+          if (request.mode === 'navigate') return caches.match('/offline.html');
+        });
+    })
   );
 });
+
+// ── Helpers ───────────────────────────────────────────────────
+async function staleWhileRevalidate(request) {
+  const cache  = await caches.open(RUNTIME_CACHE);
+  const cached = await cache.match(request);
+  const fetchPromise = fetch(request).then((res) => {
+    if (res.ok) cache.put(request, res.clone());
+    return res;
+  }).catch(() => cached);
+  return cached || fetchPromise;
+}

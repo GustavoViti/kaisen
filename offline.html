@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#7c3aed" />
+  <title>Approtina – Sem Conexão</title>
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d14;
+      color: #e8e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .card {
+      background: #13131f;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 48px 36px;
+      max-width: 360px;
+      width: 100%;
+    }
+    .icon { font-size: 3.5rem; margin-bottom: 20px; }
+    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+    p  { font-size: 0.92rem; color: #9090b0; line-height: 1.6; margin-bottom: 28px; }
+    button {
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📡</div>
+    <h1>Sem conexão</h1>
+    <p>Você está offline.<br>Verifique sua internet e tente novamente.</p>
+    <button onclick="location.reload()">Tentar novamente</button>
+  </div>
+</body>
+</html>

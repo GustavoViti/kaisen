@@ -30,12 +30,13 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyB0WIHyCtPyndl8SDHbM23cXCXXDgRb9UA",
+  authDomain: "kaisen-ec30a.firebaseapp.com",
+  projectId: "kaisen-ec30a",
+  storageBucket: "kaisen-ec30a.firebasestorage.app",
+  messagingSenderId: "732869224381",
+  appId: "1:732869224381:web:425650f07bc7cfaacc14d4",
+  measurementId: "G-13GQTM4CJ4"
 };
 
 const app  = initializeApp(firebaseConfig);
@@ -85,6 +86,34 @@ const AUTH_ERRORS = {
 
 export function getAuthErrorMessage(error) {
   return AUTH_ERRORS[error?.code] ?? 'Erro ao fazer login. Tente novamente.';
+}
+
+// ── XP / Level system ─────────────────────────────────────────
+
+/**
+ * XP necessário para avançar do nível `level` para `level + 1`.
+ *   Nível 1 → 2 : 100 XP
+ *   Nível 2 → 3 : 150 XP
+ *   Nível 3 → 4 : 200 XP  (+50 a cada nível)
+ */
+export function xpForNextLevel(level) {
+  return 100 + (level - 1) * 50;
+}
+
+/**
+ * Dado o XP total acumulado, calcula:
+ *   level      — nível atual
+ *   xpInLevel  — XP acumulado dentro do nível corrente
+ *   xpNeeded   — XP total necessário para subir ao próximo nível
+ */
+export function calcLevel(totalXp) {
+  let level     = 1;
+  let remaining = Math.max(0, totalXp);
+  while (remaining >= xpForNextLevel(level)) {
+    remaining -= xpForNextLevel(level);
+    level++;
+  }
+  return { level, xpInLevel: remaining, xpNeeded: xpForNextLevel(level) };
 }
 
 // ── User profile ──────────────────────────────────────────────
@@ -185,11 +214,11 @@ export async function toggleHabitToday(uid, habit) {
 
   await updateDoc(ref, { completedDates: updated });
 
-  const xpAmount = habit.xp || 20;
-  const userRef  = doc(db, 'users', uid);
-  const userData = (await getDoc(userRef)).data();
-  const newXp    = Math.max(0, (userData.xp || 0) + (done ? -xpAmount : xpAmount));
-  const newLevel = Math.floor(newXp / 200) + 1;
+  const xpAmount       = habit.xp || 20;
+  const userRef        = doc(db, 'users', uid);
+  const userData       = (await getDoc(userRef)).data();
+  const newXp          = Math.max(0, (userData.xp || 0) + (done ? -xpAmount : xpAmount));
+  const { level: newLevel } = calcLevel(newXp);
   await updateDoc(userRef, { xp: newXp, level: newLevel });
 
   return { done: !done, xp: newXp, level: newLevel, xpAmount, completedDates: updated };

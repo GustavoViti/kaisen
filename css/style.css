@@ -366,35 +366,108 @@ input, select, textarea { font-family: inherit; }
   font-weight: 500;
 }
 
-/* ── XP Bar card ──────────────────────────────────────────── */
+/* ── XP / Level card ──────────────────────────────────────── */
 .xp-card {
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px 24px;
+  padding: 22px 24px;
   margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
 }
 
-.xp-card-header {
+/* Subtle purple glow at top-left */
+.xp-card::before {
+  content: '';
+  position: absolute;
+  top: -40px; left: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Top row ──────────────────────────────────────────────────── */
+.xp-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.xp-level-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.xp-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-glow);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 99px;
+  padding: 5px 14px 5px 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-light);
+  width: fit-content;
+}
+
+.xp-level-icon { font-size: 1rem; }
+
+.xp-level-badge strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.xp-level-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-left: 4px;
+}
+
+.xp-total-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.xp-total-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--cyan);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.xp-total-lbl {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Progress bar ─────────────────────────────────────────────── */
+.xp-track-wrap {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.xp-card-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-2);
-}
-
-.xp-card-label {
-  font-size: 0.8rem;
-  color: var(--text-3);
+  gap: 10px;
 }
 
 .xp-track {
-  height: 8px;
+  flex: 1;
+  height: 10px;
   background: var(--bg-3);
   border-radius: 99px;
   overflow: hidden;
@@ -404,9 +477,47 @@ input, select, textarea { font-family: inherit; }
   height: 100%;
   width: 0%;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-light));
-  box-shadow: 0 0 8px var(--accent-glow);
-  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--cyan));
+  box-shadow: 0 0 10px var(--accent-glow);
+  transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.xp-pct {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-light);
+  min-width: 34px;
+  text-align: right;
+}
+
+/* Footer ───────────────────────────────────────────────────── */
+.xp-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.xp-in-level {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.xp-to-next {
+  font-size: 0.78rem;
+  color: var(--text-3);
+}
+
+.xp-to-next strong {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.xp-to-next span {
+  color: var(--accent-light);
+  font-weight: 600;
 }
 
 /* ── Habits section ───────────────────────────────────────── */
@@ -960,9 +1071,97 @@ input[type="range"] {
   text-align: right;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   CHARTS SECTION
+══════════════════════════════════════════════════════════════ */
+.charts-section {
+  margin-top: 36px;
+  padding-bottom: 48px;
+}
+
+.charts-period-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-3);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 3px 10px;
+}
+
+/* ── Charts grid ──────────────────────────────────────────── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+/* ── Chart card ───────────────────────────────────────────── */
+.chart-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: border-color var(--transition);
+}
+
+.chart-card:hover { border-color: rgba(255,255,255,0.12); }
+
+/* Full-width card (consistency chart) */
+.chart-card-full { grid-column: 1 / -1; }
+
+/* ── Chart card header ────────────────────────────────────── */
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chart-card-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.chart-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 2px;
+}
+
+.chart-subtitle {
+  font-size: 0.73rem;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+/* ── Canvas wrappers ──────────────────────────────────────── */
+.chart-wrap {
+  position: relative;
+  height: 210px;
+}
+
+/* Consistency chart needs more vertical room for horizontal bars */
+.chart-wrap-consistency {
+  height: 240px;
+}
+
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 700px) {
-  #habits-list { grid-template-columns: 1fr; }
+  #habits-list  { grid-template-columns: 1fr; }
+  .charts-grid  { grid-template-columns: 1fr; }
+  .chart-card-full { grid-column: auto; }
 }
 
 @media (max-width: 640px) {
@@ -973,9 +1172,100 @@ input[type="range"] {
   .header-user { margin-left: auto; }
   .form-row { flex-direction: column; }
   .form-group-icon { width: 100%; }
+  .chart-wrap { height: 180px; }
+  .chart-wrap-consistency { height: 220px; }
 }
 
 @media (max-width: 380px) {
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .stat-card  { padding: 14px 12px; }
 }
+
+/* ── PWA install banner ────────────────────────────────────── */
+.install-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(calc(100% + 32px));
+  width: min(440px, calc(100vw - 32px));
+  background: var(--bg-2);
+  border: 1px solid rgba(124,58,237,0.35);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.15);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 900;
+}
+
+.install-banner.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.install-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.install-banner-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+.install-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.install-banner-text strong {
+  font-size: 0.875rem;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.install-banner-text span {
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+
+.install-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.install-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.install-btn:hover { opacity: 0.85; }
+
+.install-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color var(--transition);
+  line-height: 1;
+}
+
+.install-dismiss:hover { color: var(--text-2); }
