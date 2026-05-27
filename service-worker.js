@@ -13,21 +13,15 @@ const STATIC_ASSETS = [
   '/js/charts.js',
   '/js/pwa.js',
   '/manifest.json',
-];
-
-// Optional — won't abort install if missing (icons may not be generated yet)
-const OPTIONAL_ASSETS = [
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  '/assets/icone.png',
+  '/assets/logo-fundo-tranparente.png',
+  '/assets/logo-fundo-escuro.png',
 ];
 
 // ── Install ───────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then(async (cache) => {
-      await cache.addAll(STATIC_ASSETS);
-      await Promise.allSettled(OPTIONAL_ASSETS.map((url) => cache.add(url)));
-    })
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });

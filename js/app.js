@@ -88,7 +88,7 @@ async function updateStreak() {
 function renderHeader() {
   const p = state.profile;
   document.getElementById('user-name').textContent   = p.displayName?.split(' ')[0] || 'Player';
-  document.getElementById('user-avatar').src         = p.photoURL || 'icons/icon-192.png';
+  document.getElementById('user-avatar').src         = p.photoURL || 'assets/icone.png';
 }
 
 // ── Render: stats bar ─────────────────────────────────────────
