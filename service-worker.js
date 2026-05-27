@@ -63,7 +63,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(keys.filter((k) => !ALL_CACHES.has(k)).map((k) => caches.delete(k)))
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim().catch(() => {}))
   );
 });
 
