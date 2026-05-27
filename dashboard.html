@@ -55,22 +55,30 @@
     <!-- Stats -->
     <div class="stats-grid" role="list" aria-label="Estatísticas do jogador">
       <div class="stat-card accent-purple" role="listitem">
-        <span class="stat-icon" aria-hidden="true">⚡</span>
+        <span class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
         <span class="stat-value" id="stat-level">—</span>
         <span class="stat-label">Nível</span>
       </div>
       <div class="stat-card accent-cyan" role="listitem">
-        <span class="stat-icon" aria-hidden="true">💎</span>
+        <span class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </span>
         <span class="stat-value" id="stat-xp">—</span>
         <span class="stat-label">XP Total</span>
       </div>
       <div class="stat-card accent-amber" role="listitem">
-        <span class="stat-icon" aria-hidden="true">🔥</span>
+        <span class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z"/></svg>
+        </span>
         <span class="stat-value" id="stat-streak">—</span>
         <span class="stat-label">Dias Seguidos</span>
       </div>
       <div class="stat-card accent-green" role="listitem">
-        <span class="stat-icon" aria-hidden="true">✅</span>
+        <span class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </span>
         <span class="stat-value" id="stat-done">—</span>
         <span class="stat-label">Hoje</span>
       </div>
@@ -83,7 +91,9 @@
         <!-- Lado esquerdo: badge de nível + título de rank -->
         <div class="xp-level-group">
           <div class="xp-level-badge">
-            <span class="xp-level-icon" aria-hidden="true">⚡</span>
+            <span class="xp-level-icon" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </span>
             <span>Nível <strong id="xp-level-num">1</strong></span>
           </div>
           <span class="xp-level-title" id="level-title">Iniciante</span>
@@ -149,7 +159,9 @@
         <!-- Gráfico 1: hábitos por dia (semana) -->
         <div class="chart-card">
           <div class="chart-card-header">
-            <div class="chart-card-icon" aria-hidden="true">📊</div>
+            <div class="chart-card-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
             <div>
               <h3 class="chart-title">Hábitos por Dia</h3>
               <p class="chart-subtitle">Última semana</p>
@@ -163,7 +175,9 @@
         <!-- Gráfico 2: evolução de XP (30 dias) -->
         <div class="chart-card">
           <div class="chart-card-header">
-            <div class="chart-card-icon" aria-hidden="true">📈</div>
+            <div class="chart-card-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
             <div>
               <h3 class="chart-title">Evolução de XP</h3>
               <p class="chart-subtitle">Últimos 30 dias · acumulado</p>
@@ -177,7 +191,9 @@
         <!-- Gráfico 3: consistência por hábito (30 dias) -->
         <div class="chart-card chart-card-full">
           <div class="chart-card-header">
-            <div class="chart-card-icon" aria-hidden="true">🎯</div>
+            <div class="chart-card-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
             <div>
               <h3 class="chart-title">Consistência por Missão</h3>
               <p class="chart-subtitle">% de conclusão nos últimos 30 dias</p>
@@ -199,7 +215,9 @@
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-heading">Nova Missão</h2>
-      <button class="modal-close" id="modal-close" aria-label="Fechar modal">✕</button>
+      <button class="modal-close" id="modal-close" aria-label="Fechar modal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <form id="habit-form" novalidate>
@@ -224,7 +242,7 @@
             class="form-control-icon"
             type="text"
             id="habit-icon-input"
-            placeholder="🎯"
+            placeholder="★"
             maxlength="2"
             autocomplete="off"
           />
@@ -264,7 +282,9 @@
 <!-- ── Install banner ───────────────────────────────────────── -->
 <div id="install-banner" class="install-banner" role="complementary" aria-label="Instalar aplicativo">
   <div class="install-banner-content">
-    <span class="install-banner-icon" aria-hidden="true">📲</span>
+    <span class="install-banner-icon" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </span>
     <div class="install-banner-text">
       <strong>Instale o Kaisen</strong>
       <span>Acesso rápido · funciona offline</span>
@@ -272,7 +292,9 @@
   </div>
   <div class="install-banner-actions">
     <button class="install-btn" onclick="installPWA()">Instalar</button>
-    <button class="install-dismiss" onclick="dismissInstall()" aria-label="Dispensar">✕</button>
+    <button class="install-dismiss" onclick="dismissInstall()" aria-label="Dispensar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
 </div>
 

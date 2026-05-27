@@ -162,7 +162,9 @@ function renderHabits() {
   if (!state.habits.length) {
     container.innerHTML = `
       <div class="empty-state">
-        <span class="empty-icon">🎮</span>
+        <span class="empty-icon">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        </span>
         <p>Nenhuma missão ainda.<br>Adicione seu primeiro desafio!</p>
       </div>`;
     return;
@@ -189,7 +191,9 @@ function renderHabits() {
 
     card.innerHTML = `
       <div class="hc-top">
-        <div class="hc-icon">${habit.icon || '🎯'}</div>
+        <div class="hc-icon">${habit.icon ||
+          `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`
+        }</div>
         <div class="hc-body">
           <h3 class="hc-name">${escHtml(habit.name)}</h3>
           <div class="hc-meta">
@@ -198,7 +202,10 @@ function renderHabits() {
           </div>
         </div>
         <div class="hc-streak">
-          <span class="hc-streak-icon">${streak > 0 ? '🔥' : '💤'}</span>
+          <span class="hc-streak-icon">${streak > 0
+            ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z"/></svg>`
+            : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.4"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`
+          }</span>
           <span class="hc-streak-num">${streak}</span>
           <span class="hc-streak-lbl">streak</span>
         </div>
@@ -248,10 +255,10 @@ async function handleToggle(habitId, cardEl) {
   try {
     const result = await toggleHabitToday(state.user.uid, habit);
     if (result.done && cardEl) spawnXpFloat(cardEl, result.xpAmount);
-    showToast(result.done ? `✅ +${result.xpAmount} XP conquistados!` : '↩️ Hábito desmarcado');
+    showToast(result.done ? `+${result.xpAmount} XP conquistados` : 'Hábito desmarcado', result.done ? 'success' : 'warn');
   } catch (err) {
     console.error('Toggle error:', err);
-    showToast('❌ Erro ao salvar. Tente novamente.');
+    showToast('Erro ao salvar. Tente novamente.', 'error');
     if (btn) { btn.disabled = false; btn.style.opacity = ''; }
   }
   // onSnapshot atualiza o card automaticamente após o write
@@ -261,9 +268,9 @@ async function handleDelete(habitId) {
   if (!confirm('Remover esta missão permanentemente?')) return;
   try {
     await deleteHabit(habitId);
-    showToast('🗑️ Missão removida.');
+    showToast('Missão removida', 'warn');
   } catch {
-    showToast('❌ Erro ao remover. Tente novamente.');
+    showToast('Erro ao remover. Tente novamente.', 'error');
   }
 }
 
@@ -300,7 +307,7 @@ function closeModal() {
 modalForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name     = document.getElementById('habit-name-input').value.trim();
-  const icon     = document.getElementById('habit-icon-input').value.trim() || '🎯';
+  const icon     = document.getElementById('habit-icon-input').value.trim();
   const category = document.getElementById('habit-category').value;
   const xp       = parseInt(xpSlider?.value || '20', 10);
   if (!name) return;
@@ -310,7 +317,7 @@ modalForm.addEventListener('submit', async (e) => {
   try {
     await addHabit(state.user.uid, { name, icon, category, xp });
     closeModal();
-    showToast('🎯 Nova missão adicionada!');
+    showToast('Nova missão adicionada', 'success');
   } finally {
     submitBtn.disabled = false;
   }
@@ -327,7 +334,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
 
 // ── Celebrations ──────────────────────────────────────────────
 function celebrateLevelUp(level) {
-  showToast(`🎉 NÍVEL ${level} DESBLOQUEADO! Continue assim!`, 4500);
+  showToast(`Nível ${level} desbloqueado!`, 'level', 4000);
 }
 
 function spawnXpFloat(cardEl, amount) {
@@ -340,11 +347,19 @@ function spawnXpFloat(cardEl, amount) {
 }
 
 // ── Toast ─────────────────────────────────────────────────────
+const TOAST_ICONS = {
+  success: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  error:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  warn:    `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+  level:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+};
+
 let toastTimer;
-function showToast(message, duration = 2800) {
+function showToast(message, type = 'success', duration = 2800) {
   const toast = document.getElementById('toast');
   clearTimeout(toastTimer);
-  toast.textContent = message;
+  toast.className = `toast-${type}`;
+  toast.innerHTML = `<span class="toast-icon">${TOAST_ICONS[type] || ''}</span><span>${message}</span>`;
   toast.classList.add('show');
   toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
 }
