@@ -279,8 +279,9 @@ function getFreqLabel(freq) {
 }
 
 function renderHabits() {
-  const today     = todayStr();
   const container = document.getElementById('habits-list');
+  if (!container) return;
+  const today     = todayStr();
   container.innerHTML = '';
 
   if (!state.habits.length) {
