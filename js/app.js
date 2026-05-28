@@ -150,7 +150,22 @@ function showErrorBanner(message) {
 // ── Notifications ──────────────────────────────────────────────
 async function setupNotifications(uid) {
   const btn = document.getElementById('notify-btn');
-  if (!btn || !('Notification' in window)) { btn?.remove(); return; }
+  if (!btn) return;
+
+  const isIOS        = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.navigator.standalone === true ||
+                       window.matchMedia('(display-mode: standalone)').matches;
+
+  // iOS em Safari (não standalone): o botão orienta a instalar o app primeiro
+  if (isIOS && !isStandalone) {
+    btn.addEventListener('click', () => {
+      showToast('Para ativar notificações no iOS, adicione o Kaisen à Tela de Início.', 'info', 6000);
+    });
+    return;
+  }
+
+  // Plataforma não suporta a Notification API (ex: Android WebView antigo)
+  if (!('Notification' in window)) { btn.remove(); return; }
 
   const updateBtn = () => {
     const granted = Notification.permission === 'granted';

@@ -23,12 +23,26 @@ try {
   });
 } catch (_) { /* FCM indisponível neste ambiente */ }
 
+// Standard Web Push handler — used by iOS standalone PWA
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data?.json() ?? {}; } catch (_) {}
+  const title = data.title || 'Kaisen';
+  const body  = data.body  || 'Hora de completar seus hábitos!';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body, icon: '/assets/icone.png', badge: '/assets/icone.png',
+      tag: 'kaisen-reminder', renotify: true, data: { url: '/dashboard.html' },
+    })
+  );
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(clients.openWindow(event.notification.data?.url || '/dashboard.html'));
 });
 
-const STATIC_CACHE  = 'kaisen-static-v2';
+const STATIC_CACHE  = 'kaisen-static-v3';
 const RUNTIME_CACHE = 'kaisen-runtime-v1';
 const ALL_CACHES    = new Set([STATIC_CACHE, RUNTIME_CACHE]);
 

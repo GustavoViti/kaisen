@@ -1,6 +1,15 @@
 // Handles PWA install prompt (Android / Chrome)
 let deferredPrompt = null;
 
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function isStandalone() {
+  return window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+}
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
@@ -13,6 +22,13 @@ window.addEventListener('appinstalled', () => {
   hideBanner();
   deferredPrompt = null;
 });
+
+// iOS: mostra banner de instrução manual se não está no modo standalone
+if (isIOS() && !isStandalone() && !sessionStorage.getItem('ios-install-dismissed')) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('ios-install-banner')?.classList.add('show');
+  });
+}
 
 function showBanner() {
   document.getElementById('install-banner')?.classList.add('show');
@@ -33,4 +49,9 @@ window.installPWA = async function () {
 window.dismissInstall = function () {
   sessionStorage.setItem('pwa-install-dismissed', '1');
   hideBanner();
+};
+
+window.dismissIOSInstall = function () {
+  sessionStorage.setItem('ios-install-dismissed', '1');
+  document.getElementById('ios-install-banner')?.classList.remove('show');
 };

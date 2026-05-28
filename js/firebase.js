@@ -47,18 +47,47 @@ export const db   = getFirestore(app);
 let _messaging = null;
 try { _messaging = getMessaging(app); } catch (_) {}
 // Gerar em: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
-const VAPID_KEY = 'YOUR_VAPID_KEY_HERE';
+const VAPID_KEY = 'BPIa8plGem2_JCzcK0KObfns7Qy8Fz5Bf1rAMNgcLloqLQ4Xmq5awQ07JeRIrloXXycvsr_bSwbBM1sXAE3-_Bo';
+
+// Converte VAPID key base64url → Uint8Array (exigido pelo PushManager.subscribe no iOS)
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw     = atob(base64);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
 
 export async function requestNotificationPermission(uid) {
-  if (!('Notification' in window) || !_messaging) return null;
+  if (!('Notification' in window)) return null;
   try {
     const perm = await Notification.requestPermission();
     if (perm !== 'granted') return null;
+
     const swReg = await navigator.serviceWorker.ready;
-    const token = await getToken(_messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
-    if (token) await updateProfile(uid, { fcmToken: token });
-    return token;
-  } catch (e) { console.error('FCM token error:', e); return null; }
+
+    // Tenta FCM getToken (Android / desktop Chrome)
+    if (_messaging) {
+      try {
+        const token = await getToken(_messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
+        if (token) {
+          await updateProfile(uid, { fcmToken: token });
+          return token;
+        }
+      } catch (_) { /* iOS não suporta FCM — cai para Web Push padrão */ }
+    }
+
+    // Fallback: Web Push padrão via PushManager (funciona no iOS standalone)
+    if ('PushManager' in window) {
+      const sub = await swReg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_KEY),
+      });
+      await updateProfile(uid, { webPushSub: sub.toJSON() });
+      return sub.endpoint;
+    }
+
+    return null;
+  } catch (e) { console.error('Notification permission error:', e); return null; }
 }
 
 export function onForegroundMessage(callback) {
